@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Conveyor Configurator</title>
+
+<style>
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+body {
+  margin: 0;
+  background: #0f172a;
+  color: white;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.app {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+}
+.card {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  animation: fade 0.4s ease;
+}
+h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+input {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: none;
+  margin-top: 16px;
+}
+.error {
+  color: #fb7185;
+  margin-top: 10px;
+}
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+button {
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+.primary { background: #38bdf8; }
+.secondary { background: #475569; color: white; }
+.home {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-size: 20px;
+  cursor: pointer;
+}
+@keyframes fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+<div class="home" onclick="goHome()">🏠</div>
+
+<div class="app">
+  <div class="card">
+    <h2 id="question"></h2>
+    <input id="answer" inputmode="numeric" pattern="[0-9]*" />
+    <div class="error" id="error"></div>
+
+    <div class="buttons">
+      <button class="secondary" onclick="prev()">← Geri</button>
+      <button class="primary" onclick="next()">İleri →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { key: "CONVEYOR_LENGTH_MM", text: "Konveyör uzunluğu (mm)?" },
+  { key: "CONVEYOR_WIDTH_MM", text: "Konveyör genişliği (mm)?" },
+  { key: "CONVEYOR_HEIGHT_MM", text: "Konveyör yerden yüksekliği (mm)?" },
+  { key: "H1_MM", text: "H1 yüksekliği (mm)?" },
+  { key: "H2_MM", text: "H2 yüksekliği (mm)?" },
+  { key: "BELT_WIDTH_MM", text: "Bant genişliği (mm)?" },
+  { key: "BELT_SPEED_MPM", text: "Bant hızı (m/dk)?" },
+  { key: "LOAD_KG", text: "Taşınacak yük (kg)?" },
+  { key: "MOTOR_POWER_KW", text: "Motor gücü (kW)?" },
+  { key: "ANGLE_DEG", text: "Dönüş açısı (derece)?" },
+  { key: "FRAME_LENGTH_MM", text: "Şase boyu (mm)?" }
+];
+
+let index = 0;
+let data = {};
+
+const qEl = document.getElementById("question");
+const aEl = document.getElementById("answer");
+const eEl = document.getElementById("error");
+
+function render() {
+  qEl.textContent = `${index + 1}. ${questions[index].text}`;
+  aEl.value = data[questions[index].key] || "";
+  eEl.textContent = "";
+  setTimeout(() => aEl.focus(), 100);
+}
+
+function next() {
+  if (!aEl.value) {
+    eEl.textContent = "Değer girmelisiniz.";
+    return;
+  }
+  data[questions[index].key] = Number(aEl.value);
+
+  if (index < questions.length - 1) {
+    index++;
+    render();
+  } else {
+    exportJSON();
+  }
+}
+
+function prev() {
+  if (index > 0) {
+    index--;
+    render();
+  }
+}
+
+function goHome() {
+  if (confirm("Tüm veriler silinecek. Emin misiniz?")) {
+    index = 0;
+    data = {};
+    render();
+  }
+}
+
+function exportJSON() {
+  const output = {
+    CONFIG_TYPE: "CONVEYOR",
+    DATE: new Date().toISOString(),
+    PARAMETERS: data
+  };
+
+  const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `CONVEYOR_CONFIG_${Date.now()}.json`;
+  a.click();
+}
+
+render();
+</script>
+</body>
+</html>
